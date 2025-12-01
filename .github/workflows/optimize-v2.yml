@@ -16,7 +16,7 @@ jobs:
       - name: Prepare deployment package
         run: |
           mkdir deploy_package
-          cp -r * deploy_package/
+          cp -r !(deploy_package|.git|.github|.venv) deploy_package/
           zip -r deploy_package.zip deploy_package/
 
       - name: Upload artifact
