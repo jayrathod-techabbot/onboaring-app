@@ -1,0 +1,59 @@
+name: Deploy Streamlit App to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repo
+      - uses: actions/checkout@v4
+
+      # ==============================
+      # Prepare deployment package
+      # ==============================
+      - name: Prepare clean deployment package
+        run: |
+          rm -rf deploy_package
+          mkdir deploy_package
+
+          # Copy only needed app files
+          cp app.py deploy_package/
+          cp assistant.py deploy_package/
+          cp gui.py deploy_package/
+          cp prompts.py deploy_package/
+          cp requirements.txt deploy_package/
+          
+          # Copy data folder
+          if [ -d "data" ]; then
+            cp -r data deploy_package/data
+          fi
+
+          # Copy env file (optional)
+          if [ -f ".env" ]; then
+            cp .env deploy_package/.env
+          fi
+
+          # Remove hostingstart.html if exists
+          if [ -f "hostingstart.html" ]; then
+            rm hostingstart.html
+          fi
+
+          # Create final zip
+          cd deploy_package
+          zip -r ../deploy_package.zip .
+
+      # ==============================
+      # Deploy to Azure Web App
+      # ==============================
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: web-app-onboarding-v2
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: deploy_package.zip
