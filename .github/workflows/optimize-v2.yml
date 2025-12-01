@@ -1,4 +1,4 @@
-name: Deploy Minimal Streamlit App to Azure Web App
+name: Deploy Streamlit App to Azure Web App
 
 on:
   push:
@@ -13,28 +13,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Prepare minimal deployment package
+      - name: Create clean deployment folder
         run: |
           mkdir deploy_package
 
-          # Copy only essential files
-          cp app.py deploy_package/
-          cp requirements.txt deploy_package/
+          # Copy only required files
+          rsync -av \
+            --include="*/" \
+            --include="*.py" \
+            --include="requirements.txt" \
+            --include="pages/***" \
+            --include="assets/***" \
+            --exclude="*" \
+            ./ deploy_package/
 
-          # Copy source folders if you have them
-          if [ -d "src" ]; then
-            cp -r src deploy_package/
-          fi
-          if [ -d "static" ]; then
-            cp -r static deploy_package/
-          fi
-          if [ -d "templates" ]; then
-            cp -r templates deploy_package/
-          fi
-
-          # Zip the package
           cd deploy_package
           zip -r ../deploy_package.zip .
+
+      - name: Show ZIP size
+        run: |
+          echo "=== Deployment ZIP Size ==="
+          du -h deploy_package.zip
+          echo "==========================="
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
