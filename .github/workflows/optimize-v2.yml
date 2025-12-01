@@ -16,8 +16,15 @@ jobs:
       - name: Prepare deployment package
         run: |
           mkdir deploy_package
-          cp -r !(deploy_package|.git|.github|.venv) deploy_package/
-          zip -r deploy_package.zip deploy_package/
+          rsync -av \
+            --exclude="deploy_package" \
+            --exclude=".git" \
+            --exclude=".github" \
+            --exclude=".venv" \
+            --exclude="*.zip" \
+            ./ deploy_package/
+          cd deploy_package
+          zip -r ../deploy_package.zip .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
