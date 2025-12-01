@@ -1,2 +1,11 @@
 .DS_Store
 .env
+__pycache__/
+venv/
+.ipynb_checkpoints
+*.pyc
+*.pyo
+*.pyd
+github/
+.idea/
+requirements_backup.txt

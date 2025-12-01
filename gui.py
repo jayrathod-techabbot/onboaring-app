@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 
+
 class AssistantGUI:
     def __init__(self, assistant):
         self.assistant = assistant
@@ -44,9 +45,9 @@ class AssistantGUI:
             # st.logo(
             #     "https://upload.wikimedia.org/wikipedia/commons/0/0e/Umbrella_Corporation_logo.svg"
             # )
-            logo_path = os.path.join("image", "logo.png")
+            logo_path = os.path.join("image", "image.png")
             st.image(logo_path, use_column_width=True)
-            st.title("Saran AI Assistant")
+            st.title("Techabbot AI Assistant")
 
             st.subheader("Employee Information")
             st.write(self.employee_information)

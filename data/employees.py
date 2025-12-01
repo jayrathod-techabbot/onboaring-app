@@ -34,11 +34,10 @@ def generate_employee_data(num_employees=5):
                 "Leadership", "Database Management", "Public Speaking"
             ], k=random.randint(2, 5)),
             "location": random.choice([
-                "Raccoon City HQ", 
-                "SaranAI Europe", 
-                "SaranAI Asia", 
-                "SaranAI North America", 
-                "SaranAI South America"
+                "Ahmedabad", 
+                "Anand", 
+                "Junagadh", 
+                "Rajkot", 
             ]),
             "hire_date": (
                 datetime.now() - timedelta(days=random.randint(1, 365 * 10))
