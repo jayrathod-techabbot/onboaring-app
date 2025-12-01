@@ -42,11 +42,25 @@ jobs:
       # 🔹 Zip the virtual environment + code for deployment
       - name: Prepare deployment package
         run: |
+          # Clean start
+          rm -rf deploy_package
           mkdir deploy_package
-          cp -r * deploy_package/
-          # Include .venv folder
-          cp -r .venv deploy_package/.venv
-          zip -r deploy_package.zip deploy_package/*
+
+          # Enable extended globbing so we can exclude deploy_package itself
+          shopt -s extglob
+
+          # Copy everything EXCEPT deploy_package
+          cp -r !(deploy_package) deploy_package/
+
+          # Ensure .venv exists before copying (optional)
+          if [ -d ".venv" ]; then
+            cp -r .venv deploy_package/.venv
+          fi
+
+          # Zip the package
+          cd deploy_package
+          zip -r ../deploy_package.zip .
+
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
