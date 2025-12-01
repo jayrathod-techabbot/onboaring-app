@@ -1,4 +1,4 @@
-name: Deploy Streamlit App to Azure Web App
+name: Deploy Minimal Streamlit App to Azure Web App
 
 on:
   push:
@@ -13,16 +13,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Prepare deployment package
+      - name: Prepare minimal deployment package
         run: |
           mkdir deploy_package
-          rsync -av \
-            --exclude="deploy_package" \
-            --exclude=".git" \
-            --exclude=".github" \
-            --exclude=".venv" \
-            --exclude="*.zip" \
-            ./ deploy_package/
+
+          # Copy only essential files
+          cp app.py deploy_package/
+          cp requirements.txt deploy_package/
+
+          # Copy source folders if you have them
+          if [ -d "src" ]; then
+            cp -r src deploy_package/
+          fi
+          if [ -d "static" ]; then
+            cp -r static deploy_package/
+          fi
+          if [ -d "templates" ]; then
+            cp -r templates deploy_package/
+          fi
+
+          # Zip the package
           cd deploy_package
           zip -r ../deploy_package.zip .
 
