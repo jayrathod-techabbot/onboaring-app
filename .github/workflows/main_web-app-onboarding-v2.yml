@@ -16,45 +16,37 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python (Only for requirement checks/linting if needed)
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # 🔹 Cache pip packages for faster installs
-      - name: Cache pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-            
-      # 🔹 Create virtual environment & install dependencies
-      - name: Install dependencies
+      # NOTE: Caching and installing dependencies is NOT needed if you rely on Oryx 
+      # on Azure, but we keep the steps simple here.
+      
+      # 🔹 Ensure dependencies are available (only if needed for checks/linting)
+      - name: Install Dependencies for Local Checks (Optional)
         run: |
-          python -m venv .venv
-          source .venv/bin/activate
+          # Only install if you need to run tests/linting in the build job itself.
+          # If you don't, you can REMOVE this step entirely.
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip freeze > requirements.freeze.txt
           
-      # 🔹 Zip the virtual environment + code for deployment
+      # 🔹 Prepare deployment package (Only source code + requirements.txt)
       - name: Prepare deployment package
         run: |
           # Clean start
           rm -rf deploy_package
           mkdir deploy_package
           
-          # Use bash -c to enable extended globbing (-O extglob) and safely copy 
-          # everything EXCEPT the deploy_package directory itself.
-          bash -c 'cp -r !(deploy_package) deploy_package/'
-          
-          # Ensure .venv exists before copying (This will copy the hidden directory 
-          # which the previous command might miss depending on shell default behavior)
-          if [ -d ".venv" ]; then
-            cp -r .venv deploy_package/.venv
-          fi
+          # Copy EVERYTHING EXCEPT directories/files Azure doesn't need
+          # Use rsync which is better for exclusion
+          rsync -av . deploy_package/ \
+            --exclude 'deploy_package/' \
+            --exclude '.git/' \
+            --exclude '__pycache__/' \
+            --exclude '*.pyc' \
+            --exclude '.venv/' 
           
           # Zip the package
           cd deploy_package
@@ -82,13 +74,11 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          # Make sure AZURE_CREDENTIALS is set as a repository secret
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'web-app-onboarding-v2'
-          # Make sure AZUREAPPSERVICE_PUBLISHPROFILE is set as a repository secret
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: deploy_package.zip
