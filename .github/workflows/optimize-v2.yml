@@ -6,7 +6,6 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
 
@@ -14,30 +13,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      # 🧪 Install deps locally (without creating .venv)
-      - name: Install Python dependencies
-        run: |
-          pip install -r requirements.txt
-
-      # 📦 Prepare deployment package (exclude venv, git, artifacts)
       - name: Prepare deployment package
         run: |
           mkdir deploy_package
-          shopt -s extglob
-          cp -r !(deploy_package|.git|.github|.venv|*.zip) deploy_package/
-          zip -r deploy_package.zip deploy_package
+          cp -r * deploy_package/
+          zip -r deploy_package.zip deploy_package/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: deploy_artifact
           path: deploy_package.zip
-
 
   deploy:
     runs-on: ubuntu-latest
@@ -57,6 +43,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'web-app-onboarding-v2'
+          app-name: "web-app-onboarding-v2"
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: deploy_package.zip
