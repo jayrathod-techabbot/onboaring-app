@@ -63,14 +63,11 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BC2315FE1D394ACAA7F10AB744F7D892 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_542B428E97EE4CE8BEF7B902E12B9D22 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_95072F0DB311492CAC5C280646AD0FA0 }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
         with:
           app-name: 'web-app-onboarding-v2'
-          slot-name: 'Production'
-          
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: .
