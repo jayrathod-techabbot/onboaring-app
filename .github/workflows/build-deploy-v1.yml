@@ -16,22 +16,23 @@ jobs:
       - name: Create clean deployment folder
         run: |
           mkdir deploy_package
-          # Copy only required files
+
+          # Copy required python + assets only
           rsync -av \
             --include="*/" \
             --include="*.py" \
             --include="requirements.txt" \
-            --include="pages/***" \
-            --include="assets/***" \
+            --include="pages/**" \
+            --include="assets/**" \
             --exclude="*" \
             ./ deploy_package/
+
           cd deploy_package
           zip -r ../deploy_package.zip .
+
       - name: Show ZIP size
-        run: |
-          echo "=== Deployment ZIP Size ==="
-          du -h deploy_package.zip
-          echo "==========================="
+        run: du -h deploy_package.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -48,10 +49,8 @@ jobs:
         with:
           name: deploy_artifact
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      # ❗ DO NOT USE azure/login + publish-profile together
+      # Use only publish-profile (simplest + fastest)
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
