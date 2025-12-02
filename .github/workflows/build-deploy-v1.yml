@@ -1,0 +1,61 @@
+name: Deploy Streamlit App to Azure Web App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create clean deployment folder
+        run: |
+          mkdir deploy_package
+          # Copy only required files
+          rsync -av \
+            --include="*/" \
+            --include="*.py" \
+            --include="requirements.txt" \
+            --include="pages/***" \
+            --include="assets/***" \
+            --exclude="*" \
+            ./ deploy_package/
+          cd deploy_package
+          zip -r ../deploy_package.zip .
+      - name: Show ZIP size
+        run: |
+          echo "=== Deployment ZIP Size ==="
+          du -h deploy_package.zip
+          echo "==========================="
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy_artifact
+          path: deploy_package.zip
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy_artifact
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "web-app-onboarding-v2"
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: deploy_package.zip
